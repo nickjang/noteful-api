@@ -1,3 +1,4 @@
+const { expect } = require('chai')
 const knex = require('knex')
 const app = require('../src/app')
 const { makeFoldersArray } = require('./folders.fixtures')
@@ -138,7 +139,7 @@ describe('Notes Endpoints', function () {
         .insert(testFolders)
     })
 
-    it(`creates an note, responding with 201 and the new note`, () => {
+    it(`creates a note, responding with 201 and the new note`, () => {
       const newNote = {
         note_name: 'Test new note',
         note_content: 'Test new content',
@@ -153,7 +154,11 @@ describe('Notes Endpoints', function () {
           expect(res.body.note_content).to.eql(newNote.note_content)
           expect(res.body.folder_id).to.eql(newNote.folder_id)
           expect(res.body).to.have.property('id')
+          expect(res.body).to.have.property('modified')
           expect(res.headers.location).to.eql(`/api/notes/${res.body.id}`)
+          const expected = new Intl.DateTimeFormat('en-US').format(new Date())
+          const actual = new Intl.DateTimeFormat('en-US').format(new Date(res.body.modified))
+          expect(actual).to.eql(expected)
         })
         .then(res =>
           supertest(app)
@@ -263,7 +268,8 @@ describe('Notes Endpoints', function () {
         const idToUpdate = 2
         const updateNote = {
           note_name: 'updated note title',
-          note_content: 'updated note content'
+          note_content: 'updated note content',
+          modified: new Intl.DateTimeFormat('en-US').format(new Date())
         }
         const expectedNote = {
           ...testNotes[idToUpdate - 1],
@@ -276,7 +282,10 @@ describe('Notes Endpoints', function () {
           .then(res =>
             supertest(app)
               .get(`/api/notes/${idToUpdate}`)
-              .expect(expectedNote)
+              .then(res => {
+                res.body.modified = new Intl.DateTimeFormat('en-US').format(new Date(res.body.modified));
+                expect(res.body).to.eql(expectedNote);
+              })
           )
       })
 
@@ -296,7 +305,8 @@ describe('Notes Endpoints', function () {
         const idToUpdate = 2
         const updateNote = {
           note_name: 'updated note name',
-          note_content: 'updated note content'
+          note_content: 'updated note content',
+          modified: new Intl.DateTimeFormat('en-US').format(new Date())
         }
         const expectedNote = {
           ...testNotes[idToUpdate - 1],
@@ -313,7 +323,10 @@ describe('Notes Endpoints', function () {
           .then(res =>
             supertest(app)
               .get(`/api/notes/${idToUpdate}`)
-              .expect(expectedNote)
+              .then(res => {
+                res.body.modified = new Intl.DateTimeFormat('en-US').format(new Date(res.body.modified));
+                expect(res.body).to.eql(expectedNote);
+              })
           )
       })
     })

@@ -10,6 +10,7 @@ const serialize = note => ({
   id: note.id,
   note_name: xss(note.note_name),
   note_content: xss(note.note_content),
+  modified: note.modified,
   folder_id: note.folder_id,
 });
 
@@ -34,6 +35,7 @@ notesRouter
         });
 
     newNote.folder_id = folder_id;
+    
     NotesService.insertNote(
       req.app.get('db'),
       newNote
@@ -89,6 +91,8 @@ notesRouter
           message: 'Request body must contain either \'note_name\' or \'note_content\''
         }
       });
+
+    noteToUpdate.modified = new Date();
 
     NotesService.updateNote(
       req.app.get('db'),
